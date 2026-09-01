@@ -1,0 +1,67 @@
+#!/bin/sh
+TARGET=$1
+TARGET_RPATH=$2
+RED='\033[0;91m'
+GREEN='\033[0;92m'
+YELLOW='\033[0;93m'
+
+usage()
+{
+	echo "usage: libseekstr <target> <rpath>"
+	echo "---target: the elf file to be analysed."
+	echo "---rpath: the lib directory for the elf file."
+	echo ""
+	echo "Input 'q' or 'quit' to exit."
+	echo "Tips: strings length is set to 3."
+	exit 1
+}
+
+if [ $# -ne 2 ]
+then
+	usage
+	exit 1
+elif [ ! -f "$TARGET" ]
+then
+	echo "${RED}[!] Not found: ${TARGET}."
+	exit 1
+elif [ ! -d "$TARGET_RPATH" ]
+then
+	echo "${RED}[!] Not found: ${TARGET_RPATH}."
+	exit 1
+fi
+
+TARGET_RPATH=${TARGET_RPATH%%/}
+
+while true
+do
+	echo "${YELLOW}[+] Now handling with ${TARGET}."
+	printf "${YELLOW}[+] Please input the string you want to search>"
+	read -r str
+	if [ -z "$str" ]
+	then
+		echo "${RED}[!] Need a str."
+		continue
+	fi
+	case "$str" in 
+	"quit")
+		echo "${GREEN}[+] EXIT."
+		exit 0
+		;;
+	"q")
+		echo "${GREEN}[+] EXIT." 
+		exit 0
+		;;
+	esac
+	strings -n 3 "$TARGET" 2>/dev/null | grep -F "$str" | while read -r tmp_line
+	do
+		echo "${GREEN}[-] $tmp_line FROM $TARGET"
+	done
+	readelf -d "$TARGET" 2>/dev/null | grep NEEDED | awk -F'[' '{print $2}' | awk -F']' '{print $1}' | while read -r line
+	do
+		strings -n 3 "$TARGET_RPATH/$line" 2>/dev/null | grep -F "$str" | while read -r tmp_line
+		do
+			echo "${GREEN}[-] $tmp_line FROM ${TARGET_RPATH}/${line}."
+		done
+	done
+done
+
