@@ -296,10 +296,7 @@ int main(int argc,char * argv[],char * envp[])
 							struct iovec iov;
 							iov.iov_base = &regs;
 							iov.iov_len = sizeof(regs);
-                                                        if(ptrace(PTRACE_GETREGSET,pid,NT_PRSTATUS,&iov) < 0)
-							{
-								printf("[+] Ptrace GETREGSET.\n");
-							}
+                                                        ptrace(PTRACE_GETREGSET,pid,NT_PRSTATUS,&iov);
                                                         unsigned long current_pc = regs.pc;
                                                         if(current_pc - 4 == saved_addr)
                                                         {
@@ -312,9 +309,9 @@ int main(int argc,char * argv[],char * envp[])
                                                                 ptrace(PTRACE_POKEDATA,pid,saved_addr,(void *)new_instr);
                                                         }
 #endif
-							ptrace(PTRACE_CONT,pid,NULL,NULL);
-							break;
 						}
+						ptrace(PTRACE_CONT,pid,NULL,NULL);
+						break;
 					}
 					else if(!strcmp(buf,"p"))
 					{
