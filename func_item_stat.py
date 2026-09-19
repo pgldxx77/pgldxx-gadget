@@ -4,8 +4,9 @@ from datetime import datetime
 from ida_segment import getseg,get_segm_name
 
 class unsafe_api:
-    def __init__(self,func_start):
+    def __init__(self,func_start,name):
         self.func_start = func_start
+        self.name = name
     def find_use_unsafe_api(self):
         self.used_by = CodeRefsTo(self.func_start,0)
         self.names_of_used_by = []
@@ -22,7 +23,7 @@ class unsafe_func:
             self.all_unsafe_api.append(unsafe_api)
 def main():
     time_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"~/Desktop/IDA_funcs_scan-{time_str}.md"
+    filename = f"/home/xubuntu/Desktop/IDA_funcs_scan-{time_str}.md"
 
     text_count = 0
     plt_count = 0
@@ -32,7 +33,7 @@ def main():
     plt_func_box = []
     text_func_box = []
     other_func_box = []
-    unsafe_api_sample_box = ["strcpy","system","exec","printf","gets","strcat","scanf","memcpy"]
+    unsafe_api_sample_box = [".strcpy",".system",".execve",".printf",".gets",".strcat",".scanf",".memcpy"]
     unsafe_api_box = []
     unsafe_func_map = {}
 
@@ -51,7 +52,7 @@ def main():
             plt_count = plt_count + 1
             plt_func_box.append((func_name,func_start,func_size))
             if func_name in unsafe_api_sample_box:
-                unsafe_api_box.append(unsafe_api(func_start))
+                unsafe_api_box.append(unsafe_api(func_start,func_name))
         else:
             other_count = other_count + 1
             other_func_box.append((func_name,func_start,func_size,seg_name))
@@ -92,7 +93,7 @@ def main():
     for uf in unsafe_func_map.values():
         apis = []
         for a in uf.all_unsafe_api:
-            apis.append(hex(a.func_start))
+            apis.append(a.name)
         apis_str = ", ".join(apis)
         f.write("| " + uf.name + " | " + apis_str + " |\n") 
     f.close()
