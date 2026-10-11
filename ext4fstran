@@ -1,0 +1,75 @@
+#!/bin/sh
+Usage()
+{
+	echo "Usage: ext4fstran	<Target> <Action> <Fsfile> [TargetPath]"
+	echo "Target:                    The file you want to transfer."
+	echo "Action: 			 Choice in 'from' or 'to'."
+	echo "Fsfile: 			 The ext4 file."
+	echo "TargetPath: 		 The final Path in rootdir."
+	echo "Tips: You must be the root user or use 'sudo'."
+}
+
+Target="$1"
+Action="$2"
+Fsfile="$3"
+TargetPath="$4"
+
+if [ -z "${Target}" ] || [ -z "${Action}" ] || [ -z "${Fsfile}" ]
+then
+	Usage
+	exit
+fi
+
+if [ ! -f "${Fsfile}" ]
+then
+	echo "[+] Unknown Fsfile."
+	exit
+fi
+
+if [ ! -d /tmp/for_fstransfer ]
+then
+	mkdir -p /tmp/for_fstransfer
+fi
+
+sudo mount -t ext4 -o loop "${Fsfile}" /tmp/for_fstransfer || {
+	echo "[+] Mount failed."
+	exit
+}
+
+if [ "${Action}" = "to" ]
+then
+	if [ ! -f "${Target}" ]
+	then
+		echo "[+] Unknown Target."
+		sudo umount /tmp/for_fstransfer
+		exit 
+	fi
+	TargetPath="${TargetPath#/}"
+	if [ -n "${TargetPath}" ] && [ ! -d "/tmp/for_fstransfer/${TargetPath}" ]
+	then
+		mkdir -p "/tmp/for_fstransfer/${TargetPath}"
+	fi
+	cp "${Target}" /tmp/for_fstransfer/"${TargetPath}"
+elif [ "${Action}" = "from" ]
+then
+	if [ ! -f "/tmp/for_fstransfer/${Target}" ]
+	then
+		echo "[+] Unknown Target in image."
+		sudo umount /tmp/for_fstransfer
+		exit 
+	fi
+	TargetPath="${TargetPath:-.}"
+	cp "/tmp/for_fstransfer/${Target}" "${TargetPath}"
+else
+	echo "[+] Unknown Action."
+	sudo umount /tmp/for_fstransfer
+	exit
+fi
+
+sudo umount /tmp/for_fstransfer
+rmdir /tmp/for_fstransfer 2>/dev/null
+
+
+
+		
+
