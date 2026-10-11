@@ -49,7 +49,7 @@ then
 	then
 		mkdir -p "/tmp/for_fstransfer/${TargetPath}"
 	fi
-	cp "${Target}" /tmp/for_fstransfer/"${TargetPath}"
+	cp -r "${Target}" /tmp/for_fstransfer/"${TargetPath}"
 elif [ "${Action}" = "from" ]
 then
 	if [ ! -f "/tmp/for_fstransfer/${Target}" ]
@@ -59,7 +59,7 @@ then
 		exit 
 	fi
 	TargetPath="${TargetPath:-.}"
-	cp "/tmp/for_fstransfer/${Target}" "${TargetPath}"
+	cp -r "/tmp/for_fstransfer/${Target}" "${TargetPath}"
 else
 	echo "[+] Unknown Action."
 	sudo umount /tmp/for_fstransfer
